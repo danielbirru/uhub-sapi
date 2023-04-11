@@ -1,68 +1,61 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
-	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="
-http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
 	
 	 <flow name="get:\cases\(nationalID):uhub-sapi-config">
-        <ee:transform>
-            <ee:variables>
-                <ee:set-variable variableName="nationalID">attributes.uriParams.'nationalID'</ee:set-variable>
-            </ee:variables>
-        </ee:transform>
-        <ee:transform>
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
+		<db:select doc:name="Select" doc:id="06d99d01-9da3-4ca9-b97b-1ae54c98e895" config-ref="Database_Config">
+			<db:sql ><![CDATA[select source,caseType, firstName, lastName, phone, email, 
+		    dateOfBirth,nationalid, nationalidType, address_streetAddress,address_city,
+			address_state, address_postal, address_country 
+            from register_covid_case  where nationalid = :nationalid]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	nationalid: attributes.uriParams.nationalID
+}]]]></db:input-parameters>
+		</db:select>
+		<choice doc:name="Choice" doc:id="872adddc-dcd8-4993-b46b-66ab8d85c18a" >
+			<when expression="#[sizeOf(payload)&gt;0]">
+				<ee:transform doc:name="Record found" doc:id="32bb308e-e197-486d-a804-60b1f076c7aa">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
-[
-  {
-    source: "Hospital1",
-    caseID: "456464",
-    caseType: "positive",
-    firstName: "John",
-    lastName: "Nixon",
-    phone: "541-754-3010",
-    email: "john@gmail.com",
-    dateOfBirth: "1989-04-26",
-    nationalID: "209-49-6193",
-    nationalIDType: "SSN",
-    address: {
-      streetAddress: "1600 Pennsylvania Avenue NW",
-      city: "Washington",
-      state: "DC",
-      postal: "20500",
-      country: "USA"
-    },
-    createDate: "2021-05-03",
-    updateDate: "2021-05-03"
-  }, 
-  {
-    source: "Hospital1",
-    caseID: "528293",
-    caseType: "negative",
-    firstName: "John",
-    lastName: "Nixon",
-    phone: "541-754-3010",
-    email: "john@gmail.com",
-    dateOfBirth: "1989-04-26",
-    nationalID: "209-49-6193",
-    nationalIDType: "SSN",
-    address: {
-      streetAddress: "1600 Pennsylvania Avenue NW",
-      city: "Washington",
-      state: "DC",
-      postal: "20500",
-      country: "USA"
-    },
-    createDate: "2020-12-14",
-    updateDate: "2020-12-14"
-  }
-]]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+payload map(covid, indexOfCovid) -> {
+	source: covid.source,
+	caseType: covid.caseType,
+	firstname: covid.firstName,
+	lastname: covid.lastName,
+	phone: covid.phone,
+	email: covid.email,
+	dateofbirth: covid.dateOfBirth,
+	nationalid: covid.nationalID,
+	nationalidtype: covid.nationalIDType,
+	country: covid.address_country,
+	streetAddress: covid.address_streetAddress,
+	city: covid.address_city,
+	state: covid.address_state,
+	postal: covid.address_postal
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="No record found" doc:id="caec692d-1d3f-43e8-a2ee-b8d82e7316dc">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": "sorry but we couldn't find any record based on your national id"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</otherwise>
+		</choice>
 		<error-handler ref="global-errorError_Handler" />
     </flow>
 	</mule>
