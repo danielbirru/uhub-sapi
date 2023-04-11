@@ -1,19 +1,50 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
-	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="
-http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
 	
 	<flow name="post:\cases:application\json:uhub-sapi-config">
-        <ee:transform>
+        <db:insert doc:name="Insert" doc:id="3f8da4ff-264f-4f2e-84ce-a48d9c3a213d" config-ref="Database_Config">
+			<db:sql ><![CDATA[insert into register_covid_case( source,caseType, firstName, lastName, phone, email, 
+                                      dateOfBirth,nationalid, nationalidType, address_streetAddress,address_city,
+                                      address_state, address_postal, address_country) 
+                                 
+                                   values(
+                                   :source,:caseType, :firstname, :lastname, :phone, :email, :dateofbirth, 
+                                   :nationalid, :nationalidtype, :address_streetaddress,:address_city,
+                                   :address_state,:address_postal,:address_country
+                               		);        ]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	source: payload.source,                               
+	caseType: payload.caseType,
+	firstname: payload.firstName,
+	lastname: payload.lastName,
+	phone: payload.phone,
+	email: payload.email,
+	dateofbirth: payload.dateOfBirth,
+	nationalid: payload.nationalID,
+	nationalidtype: payload.nationalIDType,
+	address_streetaddress: payload.address.streetAddress,
+	address_city: payload.address.city,
+	address_state: payload.address.state,
+	address_postal: payload.address.postal,
+	address_country: payload.address.country
+}]]]></db:input-parameters>
+		</db:insert>
+		<db:select doc:name="Select" doc:id="e73a4166-32c2-4c60-bb2c-e1e716aa1429" config-ref="Database_Config">
+			<db:sql ><![CDATA[select max(caseID) as caseID from register_covid_case;]]></db:sql>
+		</db:select>
+		<ee:transform>
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
 {
-  caseID: "3673673"
+  caseID: payload[0].caseID as String
 }]]></ee:set-payload>
             </ee:message>
         </ee:transform>
