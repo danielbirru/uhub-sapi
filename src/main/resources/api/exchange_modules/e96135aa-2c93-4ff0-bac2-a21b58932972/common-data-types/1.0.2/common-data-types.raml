@@ -1,0 +1,14 @@
+#%RAML 1.0 Library
+
+usage: Used for common data types across all domains
+
+types:
+  errorType:
+      type: object 
+      properties:
+        status:
+          type: integer
+          required: true
+        message:
+          type: string
+          required: true

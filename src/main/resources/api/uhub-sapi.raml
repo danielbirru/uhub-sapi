@@ -1,0 +1,126 @@
+#%RAML 1.0
+title: uhub-sapi
+version: v1
+baseUri: https://uho-{environment}-uhub-sapi/covid/{version}
+baseUriParameters:
+  environment:
+    description: DEV, TEST, PROD
+    enum: ["https://uho-dev-uhub-sapi", "https://uho-test-uhub-sapi", "https://uho-prod-uhub-sapi"]
+
+traits:
+  state-query-params: !include /traits/state-query-params.raml
+
+uses:
+  uhub-sapi-types: /uhub-sapi-types/uhub-sapi-types.raml 
+  common-data-types: /exchange_modules/e96135aa-2c93-4ff0-bac2-a21b58932972/common-data-types/1.0.2/common-data-types.raml
+
+/cases:
+  post:
+    description: To register covid case
+    body:
+      application/json:
+        type: uhub-sapi-types.covid-case-request-type
+        example: !include /example/covid-cases-request.json
+    responses:
+      201:
+        body:
+          application/json:
+            type: uhub-sapi-types.covid-case-response-type
+            example: !include /example/covid-case-response.json
+      400:
+        body:
+          application/json:
+            type: common-data-types.errorType
+            example: !include /example/bad-request.json
+      500:
+        body:
+          application/json:
+            type: common-data-types.errorType
+            example: !include /example/internal-server-error.json
+      503:
+        body:
+          application/json:
+            type: common-data-types.errorType
+            example: !include /example/service-not-avaialable-error.json
+
+
+  put:
+    description: To update covid case
+    body:
+      application/json:
+        type: uhub-sapi-types.covid-case-request-type
+        example: !include /example/covid-cases-request.json
+    responses:
+      200:
+        body:
+          application/json:
+            type: uhub-sapi-types.covid-case-response-type
+            example: !include /example/covid-case-response.json
+      400:
+        body:
+          application/json:
+            type: common-data-types.errorType
+            example: !include /example/bad-request.json
+      500:
+        body:
+          application/json:
+            type: common-data-types.errorType
+            example: !include /example/internal-server-error.json
+      503:
+        body:
+          application/json:
+            type: common-data-types.errorType
+            example: !include /example/service-not-avaialable-error.json
+
+/cases/{nationalID}:
+  get:
+    description: To get covid test by national ID
+    responses:
+      200:
+        body:
+          application/json:
+            type: uhub-sapi-types.get-cases-by-national-id-response-type
+            example: !include /example/get-cases-by-national-id-response.json
+      400:
+        body:
+          application/json:
+            type: common-data-types.errorType
+            example: !include /example/bad-request.json
+      500:
+        body:
+          application/json:
+            type: common-data-types.errorType
+            example: !include /example/internal-server-error.json
+      503:
+        body:
+          application/json:
+            type: common-data-types.errorType
+            example: !include /example/service-not-avaialable-error.json
+
+/reports:
+  get:
+    description: To get covid reports
+    is: [state-query-params]
+    responses:
+      200:
+        body:
+          application/json:
+            type: uhub-sapi-types.get-reports-response-type
+            example: !include /example/get-reports-response.json
+      400:
+        body:
+          application/json:
+            type: common-data-types.errorType
+            example: !include /example/bad-request.json
+      500:
+        body:
+          application/json:
+            type: common-data-types.errorType
+            example: !include /example/internal-server-error.json
+      503:
+        body:
+          application/json:
+            type: common-data-types.errorType
+            example: !include /example/service-not-avaialable-error.json
+              
+      
